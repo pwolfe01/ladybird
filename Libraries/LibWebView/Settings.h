@@ -19,6 +19,7 @@
 #include <LibWebView/Autocomplete.h>
 #include <LibWebView/Forward.h>
 #include <LibWebView/Options.h>
+#include <LibWebView/PrivateBrowsing.h>
 #include <LibWebView/SearchEngine.h>
 
 namespace WebView {
@@ -112,6 +113,8 @@ public:
     JsonValue serialize_json() const;
 
     URL::URL const& new_tab_page_url() const { return m_new_tab_page_url; }
+    URL::URL new_tab_page_url(IsPrivate) const;
+    bool is_new_tab_page_url(URL::URL const&, IsPrivate) const;
     void set_new_tab_page_url(URL::URL);
 
     static TabSettings parse_tab_settings(JsonValue const&);

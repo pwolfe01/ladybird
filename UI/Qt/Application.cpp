@@ -321,7 +321,8 @@ BrowserWindow& Application::new_window(Vector<URL::URL> const& initial_urls, Win
         }
     });
 
-    auto should_focus_location_editor = initial_urls.size() == 1 && initial_urls.first() == WebView::Application::settings().new_tab_page_url();
+    auto should_focus_location_editor = initial_urls.size() == 1
+        && WebView::Application::settings().is_new_tab_page_url(initial_urls.first(), is_private);
     if (should_focus_location_editor) {
         if (auto* tab = window->current_tab())
             tab->set_url_is_hidden(true);
@@ -377,20 +378,22 @@ WindowConfiguration Application::configuration_for_new_window() const
 
 void Application::open_new_tab()
 {
+    auto is_private = m_active_window ? m_active_window->is_private() : WebView::IsPrivate::No;
+    auto new_tab_url = WebView::Application::settings().new_tab_page_url(is_private);
+
     if (!m_active_window) {
-        new_window({ WebView::Application::settings().new_tab_page_url() });
+        new_window({ new_tab_url });
         return;
     }
 
-    auto& tab = m_active_window->new_tab_from_url(WebView::Application::settings().new_tab_page_url(), Web::HTML::ActivateTab::Yes, BrowserWindow::TabLocation::end());
+    auto& tab = m_active_window->new_tab_from_url(new_tab_url, Web::HTML::ActivateTab::Yes, BrowserWindow::TabLocation::end());
     tab.set_url_is_hidden(true);
     tab.focus_location_editor();
 }
 
 void Application::open_new_window(WebView::IsPrivate is_private)
 {
-    // FIXME: Create a new tab page specific to private windows.
-    new_window({ WebView::Application::settings().new_tab_page_url() }, configuration_for_new_window(), BrowserWindow::IsPopupWindow::No, is_private);
+    new_window({ WebView::Application::settings().new_tab_page_url(is_private) }, configuration_for_new_window(), BrowserWindow::IsPopupWindow::No, is_private);
 }
 
 void Application::restart_private_browsing_session()

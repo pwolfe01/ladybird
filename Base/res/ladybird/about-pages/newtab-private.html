@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="color-scheme" content="light dark" />
+        <title>Private Browsing</title>
+        <link rel="icon" type="image/png" href="resource://icons/48x48/app-browser.png" />
+        <link rel="stylesheet" type="text/css" href="resource://ladybird/ladybird.css" />
+        <link rel="stylesheet" type="text/css" href="resource://ladybird/about-pages/webui.css" />
+        <style>
+            .private-intro {
+                color: var(--secondary-text-color);
+                line-height: 1.5;
+                margin: 0 0 20px 4px;
+            }
+
+            .private-list {
+                margin: 0;
+                padding-left: 24px;
+                line-height: 1.6;
+            }
+
+            .private-list li {
+                margin-bottom: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <img src="resource://icons/48x48/app-browser.png" alt="" />
+            <h1>Private Browsing</h1>
+        </header>
+
+        <p class="private-intro">
+            You are browsing in a private window. Ladybird keeps this session separate from your normal browsing.
+        </p>
+
+        <section class="card">
+            <div class="card-body">
+                <h2 class="card-title">In this session</h2>
+                <ul class="private-list">
+                    <li>Browsing history is not saved to your profile.</li>
+                    <li>Cookies and site data use a separate private session.</li>
+                    <li>When you close all private windows, that session data is discarded.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-body">
+                <h2 class="card-title">Please note</h2>
+                <ul class="private-list">
+                    <li>Downloads and bookmarks you create may still be saved.</li>
+                    <li>Your network provider, employer, or the sites you visit may still see your activity.</li>
+                    <li>Private browsing does not make you anonymous on the web.</li>
+                </ul>
+            </div>
+        </section>
+    </body>
+</html>

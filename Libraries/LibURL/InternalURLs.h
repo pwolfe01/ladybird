@@ -30,6 +30,12 @@ namespace URL {
 ENUMERATE_INTERNAL_URLS
 #undef __URL_ENUMERATE
 
+inline URL const& about_newtab_private()
+{
+    static NeverDestroyed<URL> url = URL::about("newtab-private"_string);
+    return *url;
+}
+
 inline bool is_webui_url(URL const& url)
 {
 #define __URL_ENUMERATE(internal_url)  \
@@ -37,6 +43,9 @@ inline bool is_webui_url(URL const& url)
         return true;
     ENUMERATE_INTERNAL_URLS
 #undef __URL_ENUMERATE
+
+    if (url == about_newtab_private())
+        return true;
 
     return false;
 }

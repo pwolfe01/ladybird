@@ -450,6 +450,18 @@ void Settings::set_new_tab_page_url(URL::URL new_tab_page_url)
         observer.new_tab_page_url_changed();
 }
 
+URL::URL Settings::new_tab_page_url(IsPrivate is_private) const
+{
+    if (is_private == IsPrivate::Yes)
+        return URL::about_newtab_private();
+    return m_new_tab_page_url;
+}
+
+bool Settings::is_new_tab_page_url(URL::URL const& url, IsPrivate is_private) const
+{
+    return url == new_tab_page_url(is_private);
+}
+
 TabSettings Settings::parse_tab_settings(JsonValue const& settings)
 {
     if (!settings.is_object())
