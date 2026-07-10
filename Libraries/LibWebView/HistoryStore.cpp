@@ -360,12 +360,12 @@ void HistoryStore::update_favicon(URL::URL const& url, String const& favicon_bas
     m_storage->update_favicon(*normalized_url, favicon_base64_png);
 }
 
-void HistoryStore::record_closed_tab(URL::URL const& url, UnixDateTime closed_at)
+void HistoryStore::record_closed_tab(URL::URL const& url, size_t tab_index, UnixDateTime closed_at)
 {
     m_recently_closed_entries.empend(RecentlyClosedEntry {
         .urls = { url },
         .was_window = false,
-        .active_tab_index = 0,
+        .tab_index = tab_index,
         .closed_time = closed_at,
     });
 }

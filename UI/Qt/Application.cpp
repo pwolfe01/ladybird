@@ -430,8 +430,10 @@ void Application::reopen_recently_closed_tab()
             if (!m_active_window || m_active_window->is_private() == WebView::IsPrivate::Yes) {
                 new_window({ recently_closed_entry->urls[0] });
             } else {
-                // FIXME: Reopen the tab in its previous location.
-                m_active_window->new_tab_from_url(recently_closed_entry->urls[0], Web::HTML::ActivateTab::Yes, BrowserWindow::TabLocation::end());
+                m_active_window->new_tab_from_url(
+                    recently_closed_entry->urls[0],
+                    Web::HTML::ActivateTab::Yes,
+                    BrowserWindow::TabLocation::at_index(static_cast<int>(recently_closed_entry->tab_index)));
             }
         }
     }

@@ -30,6 +30,7 @@ struct WEBVIEW_API RecentlyClosedEntry {
     Vector<URL::URL> urls;
     bool was_window { false };
     size_t active_tab_index { 0 };
+    size_t tab_index { 0 };
     UnixDateTime closed_time;
 };
 
@@ -51,7 +52,7 @@ public:
     void update_title(URL::URL const&, String const& title);
     void update_favicon(URL::URL const&, String const& favicon_base64_png);
 
-    void record_closed_tab(URL::URL const&, UnixDateTime closed_at = UnixDateTime::now());
+    void record_closed_tab(URL::URL const&, size_t tab_index, UnixDateTime closed_at = UnixDateTime::now());
     void record_closed_window(Vector<URL::URL>, size_t active_tab_index, UnixDateTime closed_at = UnixDateTime::now());
     bool has_recently_closed_entries() const;
     Optional<RecentlyClosedEntry const&> most_recently_closed_entry() const;

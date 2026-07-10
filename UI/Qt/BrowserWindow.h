@@ -102,25 +102,30 @@ public:
             End,
             AfterCurrentTab,
             AfterTab,
+            AtIndex,
         };
 
     public:
-        static TabLocation end() { return { Kind::End, nullptr }; }
-        static TabLocation after_current_tab() { return { Kind::AfterCurrentTab, nullptr }; }
-        static TabLocation after_tab(Tab& tab) { return { Kind::AfterTab, &tab }; }
+        static TabLocation end() { return { Kind::End, nullptr, 0 }; }
+        static TabLocation after_current_tab() { return { Kind::AfterCurrentTab, nullptr, 0 }; }
+        static TabLocation after_tab(Tab& tab) { return { Kind::AfterTab, &tab, 0 }; }
+        static TabLocation at_index(int index) { return { Kind::AtIndex, nullptr, static_cast<size_t>(index) }; }
 
     private:
         Kind kind() const { return m_kind; }
         Tab* tab() const { return m_tab; }
+        size_t index() const { return m_index; }
 
-        TabLocation(Kind kind, Tab* tab)
+        TabLocation(Kind kind, Tab* tab, size_t index)
             : m_kind(kind)
             , m_tab(tab)
+            , m_index(index)
         {
         }
 
         Kind m_kind;
         Tab* m_tab { nullptr };
+        size_t m_index { 0 };
     };
 
     BrowserWindow(Vector<URL::URL> const& initial_urls, IsPopupWindow is_popup_window = IsPopupWindow::No, WebView::IsPrivate = WebView::IsPrivate::No, Tab* parent_tab = nullptr, Optional<u64> page_index = {});

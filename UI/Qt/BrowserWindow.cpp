@@ -623,6 +623,9 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab, TabLocat
         m_tabs_container->insert_tab(insertion_index, tab, "New Tab");
         break;
     }
+    case TabLocation::Kind::AtIndex:
+        m_tabs_container->insert_tab(clamp(static_cast<int>(location.index()), 0, m_tabs_container->count()), tab, "New Tab");
+        break;
     }
 
     if (activate_tab == Web::HTML::ActivateTab::Yes)
@@ -778,7 +781,7 @@ bool BrowserWindow::definitely_close_tab(int index)
     m_tabs_container->remove_tab(index);
 
     if (m_is_private == WebView::IsPrivate::No) {
-        Application::history_store(WebView::IsPrivate::No).record_closed_tab(url);
+        Application::history_store(WebView::IsPrivate::No).record_closed_tab(url, static_cast<size_t>(index));
         Application::the().update_reopen_recently_closed_actions();
     }
 
