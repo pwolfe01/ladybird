@@ -10,6 +10,7 @@
 #include <AK/StringView.h>
 #include <LibURL/URL.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/SessionStore.h>
 
 #import <Cocoa/Cocoa.h>
 
@@ -68,5 +69,8 @@ private:
 
 - (void)onDevtoolsEnabled;
 - (void)onDevtoolsDisabled;
+
+- (WebView::SessionSnapshot)captureSession;
+- (void)restoreSession:(WebView::SessionSnapshot const&)session;
 
 @end

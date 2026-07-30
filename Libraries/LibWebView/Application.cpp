@@ -18,6 +18,7 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
+#include <LibCore/Timer.h>
 #include <LibCore/TimeZoneWatcher.h>
 #include <LibDatabase/Database.h>
 #include <LibDevTools/DevToolsServer.h>
@@ -114,6 +115,7 @@ struct ApplicationBookmarkStoreObserver final : public BookmarkStoreObserver {
 Application::Application(Optional<ByteString> ladybird_binary_path)
     : m_settings(Settings::create({}))
     , m_bookmark_store(BookmarkStore::create({}))
+    , m_session_store(SessionStore::create({}))
 {
     VERIFY(!s_the);
     s_the = this;
@@ -140,6 +142,51 @@ HistoryStore& Application::history_store(IsPrivate is_private)
     return is_private == IsPrivate::Yes
         ? *the().ensure_private_browsing_session().history_store
         : *the().m_history_store;
+}
+
+static constexpr int SESSION_PERSIST_DEBOUNCE_MS = 750;
+
+void Application::schedule_session_persist()
+{
+    if (m_browser_options.headless_mode.has_value())
+        return;
+    if (!m_settings.restore_previous_session())
+        return;
+
+    if (!m_session_persist_timer) {
+        m_session_persist_timer = Core::Timer::create_single_shot(SESSION_PERSIST_DEBOUNCE_MS, [this] {
+            persist_session_now();
+        });
+    }
+
+    m_session_persist_timer->restart(SESSION_PERSIST_DEBOUNCE_MS);
+}
+
+void Application::persist_session_now()
+{
+    if (m_session_persist_timer)
+        m_session_persist_timer->stop();
+    if (m_browser_options.headless_mode.has_value())
+        return;
+    if (!m_settings.restore_previous_session())
+        return;
+
+    m_session_store.save(capture_session());
+}
+
+Optional<SessionSnapshot> Application::session_to_restore_on_startup() const
+{
+    if (m_browser_options.headless_mode.has_value())
+        return {};
+    if (!m_browser_options.raw_urls.is_empty())
+        return {};
+    if (!m_settings.restore_previous_session())
+        return {};
+
+    auto snapshot = m_session_store.load();
+    if (snapshot.is_empty())
+        return {};
+    return snapshot;
 }
 
 CookieJar& Application::cookie_jar(IsPrivate is_private)

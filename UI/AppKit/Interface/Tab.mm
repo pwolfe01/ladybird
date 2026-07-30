@@ -398,6 +398,7 @@ static NSImage* tab_loading_spinner_icon(NSUInteger frame)
 - (void)onURLChange:(URL::URL const&)url
 {
     [[self tabController] onURLChange:url];
+    WebView::Application::the().schedule_session_persist();
 }
 
 - (void)onTitleChange:(Utf16String const&)title

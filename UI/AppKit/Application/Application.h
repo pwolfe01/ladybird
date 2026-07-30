@@ -47,6 +47,7 @@ private:
 
     virtual void on_devtools_enabled() const override;
     virtual void on_devtools_disabled() const override;
+    virtual WebView::SessionSnapshot capture_session() const override;
 };
 
 }

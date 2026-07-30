@@ -25,6 +25,7 @@ class HSTSStore;
 class Menu;
 class OutOfProcessWebView;
 class ProcessManager;
+class SessionStore;
 class Settings;
 class SiteIsolationManager;
 class StorageJar;
@@ -46,6 +47,9 @@ struct DOMNodeProperties;
 struct Mutation;
 struct ProcessHandle;
 struct SearchEngine;
+struct SessionSnapshot;
+struct SessionTab;
+struct SessionWindow;
 struct WebContentOptions;
 
 }

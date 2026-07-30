@@ -25,6 +25,7 @@ private:
     void set_default_zoom_level_factor(JsonValue const&);
     void set_languages(JsonValue const&);
     void set_browsing_behavior(JsonValue const&);
+    void set_restore_previous_session(JsonValue const&);
     void set_config_variable(JsonValue const&);
 
     void load_available_engines();

@@ -29,6 +29,7 @@ set(SOURCES
     ProcessMonitor.cpp
     SearchEngine.cpp
     SessionHistory.cpp
+    SessionStore.cpp
     Settings.cpp
     SiteIsolation.cpp
     SiteIsolationManager.cpp

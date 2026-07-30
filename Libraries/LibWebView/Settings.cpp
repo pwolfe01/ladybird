@@ -48,6 +48,8 @@ static constexpr auto BROWSING_BEHAVIOR_KEY = "browsingBehavior"sv;
 static constexpr auto ENABLE_AUTOSCROLL_KEY = "enableAutoscroll"sv;
 static constexpr auto ENABLE_PRIMARY_PASTE_KEY = "enablePrimaryPaste"sv;
 
+static constexpr auto RESTORE_PREVIOUS_SESSION_KEY = "restorePreviousSession"sv;
+
 static constexpr auto SEARCH_ENGINE_KEY = "searchEngine"sv;
 static constexpr auto SEARCH_ENGINE_CUSTOM_KEY = "custom"sv;
 static constexpr auto SEARCH_ENGINE_NAME_KEY = "name"sv;
@@ -241,6 +243,9 @@ Settings Settings::create(Badge<Application>)
     if (auto browsing_behavior = settings_json.value().get(BROWSING_BEHAVIOR_KEY); browsing_behavior.has_value())
         settings.m_browsing_behavior = parse_browsing_behavior(*browsing_behavior);
 
+    if (auto restore_previous_session = settings_json.value().get_bool(RESTORE_PREVIOUS_SESSION_KEY); restore_previous_session.has_value())
+        settings.m_restore_previous_session = *restore_previous_session;
+
     if (auto search_engine = settings_json.value().get_object(SEARCH_ENGINE_KEY); search_engine.has_value()) {
         if (auto custom_engines = search_engine->get_array(SEARCH_ENGINE_CUSTOM_KEY); custom_engines.has_value()) {
             custom_engines->for_each([&](JsonValue const& engine) {
@@ -356,6 +361,7 @@ JsonValue Settings::serialize_json() const
     browsing_behavior.set(ENABLE_AUTOSCROLL_KEY, m_browsing_behavior.enable_autoscroll);
     browsing_behavior.set(ENABLE_PRIMARY_PASTE_KEY, m_browsing_behavior.enable_primary_paste);
     settings.set(BROWSING_BEHAVIOR_KEY, move(browsing_behavior));
+    settings.set(RESTORE_PREVIOUS_SESSION_KEY, m_restore_previous_session);
 
     JsonArray custom_search_engines;
     custom_search_engines.ensure_capacity(m_custom_search_engines.size());
@@ -610,6 +616,18 @@ void Settings::set_browsing_behavior(BrowsingBehavior browsing_behavior)
 
     for (auto& observer : m_observers)
         observer.browsing_behavior_changed();
+}
+
+void Settings::set_restore_previous_session(bool restore_previous_session)
+{
+    if (m_restore_previous_session == restore_previous_session)
+        return;
+
+    m_restore_previous_session = restore_previous_session;
+    persist_settings();
+
+    if (!m_restore_previous_session)
+        Application::the().session_store().clear();
 }
 
 void Settings::set_search_engine(Optional<StringView> search_engine_name)

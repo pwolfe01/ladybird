@@ -336,6 +336,7 @@ BrowserWindow& Application::new_window(Vector<URL::URL> const& initial_urls, Win
 
     window->activateWindow();
     window->raise();
+    schedule_session_persist();
     if (should_focus_location_editor) {
         QTimer::singleShot(0, window, [window] {
             if (auto* tab = window->current_tab())
@@ -455,6 +456,7 @@ void Application::quit()
     if (!confirm_cancel_active_downloads(active_window_if_any()))
         return;
 
+    persist_session_now();
     QApplication::closeAllWindows();
 
     for (auto* widget : QApplication::topLevelWidgets()) {
@@ -985,6 +987,41 @@ void Application::on_devtools_disabled() const
 void Application::on_recently_closed_entries_changed() const
 {
     update_reopen_recently_closed_actions();
+}
+
+WebView::SessionSnapshot Application::capture_session() const
+{
+    WebView::SessionSnapshot snapshot;
+
+    for (auto* widget : QApplication::topLevelWidgets()) {
+        auto* window = as_if<BrowserWindow>(widget);
+        if (!window || !window->isVisible())
+            continue;
+        if (window->is_private() == WebView::IsPrivate::Yes || window->is_popup_window())
+            continue;
+
+        WebView::SessionWindow session_window;
+        window->for_each_tab([&](Tab& tab) {
+            session_window.tabs.append({ tab.view().url() });
+        });
+        if (session_window.tabs.is_empty())
+            continue;
+
+        if (auto* current_tab = window->current_tab()) {
+            auto index = window->tab_index(current_tab);
+            if (index >= 0)
+                session_window.active_tab_index = static_cast<size_t>(index);
+        }
+
+        session_window.x = window->pos().x();
+        session_window.y = window->pos().y();
+        session_window.width = window->size().width();
+        session_window.height = window->size().height();
+        session_window.maximized = window->isMaximized();
+        snapshot.windows.append(move(session_window));
+    }
+
+    return snapshot;
 }
 
 }

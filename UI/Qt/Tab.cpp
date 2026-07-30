@@ -745,6 +745,7 @@ Tab::Tab(BrowserWindow* window, RefPtr<WebView::WebContentClient> parent_client,
 
     view().on_url_change = [this](auto const& url) {
         m_location_edit->set_url(url);
+        Application::the().schedule_session_persist();
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);

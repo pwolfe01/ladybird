@@ -141,6 +141,9 @@ public:
     BrowsingBehavior browsing_behavior() const;
     void set_browsing_behavior(BrowsingBehavior);
 
+    bool restore_previous_session() const { return m_restore_previous_session; }
+    void set_restore_previous_session(bool);
+
     Optional<SearchEngine> const& search_engine() const { return m_search_engine; }
     void set_search_engine(Optional<StringView> search_engine_name);
 
@@ -195,6 +198,7 @@ private:
     HashMap<String, double> m_zoom_per_host;
     Vector<String> m_languages;
     BrowsingBehavior m_browsing_behavior;
+    bool m_restore_previous_session { true };
     Optional<SearchEngine> m_search_engine;
     Vector<SearchEngine> m_custom_search_engines;
     Optional<AutocompleteEngine> m_autocomplete_engine;

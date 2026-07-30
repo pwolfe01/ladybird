@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <LibWebView/Application.h>
+#include <LibWebView/SessionStore.h>
 
 #import <Application/Application.h>
 #import <Application/ApplicationDelegate.h>
@@ -140,6 +142,7 @@
 - (void)removeTab:(TabController*)controller
 {
     [self.managed_tabs removeObject:controller];
+    WebView::Application::the().schedule_session_persist();
 }
 
 - (NSUInteger)tabCount
@@ -265,6 +268,7 @@
     }
 
     [self.managed_tabs addObject:controller];
+    WebView::Application::the().schedule_session_persist();
 }
 
 - (void)closeCurrentTab:(id)sender
@@ -425,6 +429,85 @@
     return menu;
 }
 
+- (WebView::SessionSnapshot)captureSession
+{
+    WebView::SessionSnapshot snapshot;
+    NSMutableSet* seen_tab_groups = [NSMutableSet set];
+
+    for (TabController* controller in self.managed_tabs) {
+        auto* tab = (Tab*)[controller window];
+        if (tab == nil || ![tab isVisible])
+            continue;
+
+        NSWindowTabGroup* tab_group = [tab tabGroup];
+        if (tab_group != nil) {
+            if ([seen_tab_groups containsObject:tab_group])
+                continue;
+            [seen_tab_groups addObject:tab_group];
+        }
+
+        WebView::SessionWindow session_window;
+        NSArray<NSWindow*>* windows = tab_group != nil ? [tab_group windows] : @[ tab ];
+        NSWindow* selected_window = tab_group != nil ? [tab_group selectedWindow] : tab;
+        size_t index = 0;
+
+        for (NSWindow* window in windows) {
+            if (![window isKindOfClass:[Tab class]])
+                continue;
+
+            auto* session_tab = (Tab*)window;
+            session_window.tabs.append(WebView::SessionTab { [[session_tab web_view] view].url() });
+            if (window == selected_window)
+                session_window.active_tab_index = index;
+            ++index;
+        }
+
+        if (session_window.tabs.is_empty())
+            continue;
+
+        auto frame = NSIntegralRect([tab frame]);
+        session_window.x = static_cast<i32>(frame.origin.x);
+        session_window.y = static_cast<i32>(frame.origin.y);
+        session_window.width = static_cast<i32>(frame.size.width);
+        session_window.height = static_cast<i32>(frame.size.height);
+        session_window.maximized = [tab isZoomed];
+        snapshot.windows.append(move(session_window));
+    }
+
+    return snapshot;
+}
+
+- (void)restoreSession:(WebView::SessionSnapshot const&)session
+{
+    for (auto const& window_state : session.windows) {
+        Tab* first_tab = nil;
+
+        for (auto const& [i, tab_state] : enumerate(window_state.tabs)) {
+            auto activate_tab = i == window_state.active_tab_index ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No;
+            auto* controller = [self createNewTab:tab_state.url
+                                          fromTab:first_tab
+                                      activateTab:activate_tab
+                                      tabLocation:TabLocation::end()];
+            auto* tab = (Tab*)[controller window];
+            if (first_tab == nil) {
+                first_tab = tab;
+                if (window_state.width.has_value() && window_state.height.has_value()) {
+                    auto frame = [tab frame];
+                    if (window_state.x.has_value())
+                        frame.origin.x = *window_state.x;
+                    if (window_state.y.has_value())
+                        frame.origin.y = *window_state.y;
+                    frame.size.width = *window_state.width;
+                    frame.size.height = *window_state.height;
+                    [tab setFrame:frame display:YES];
+                }
+                if (window_state.maximized && ![tab isZoomed])
+                    [tab zoom:nil];
+            }
+        }
+    }
+}
+
 #pragma mark - NSApplicationDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
@@ -433,6 +516,11 @@
 
     if (browser_options.devtools_port.has_value())
         [self onDevtoolsEnabled];
+
+    if (auto session = WebView::Application::the().session_to_restore_on_startup(); session.has_value()) {
+        [self restoreSession:*session];
+        return;
+    }
 
     Tab* tab = nil;
 
@@ -450,6 +538,7 @@
 
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
+    WebView::Application::the().persist_session_now();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender

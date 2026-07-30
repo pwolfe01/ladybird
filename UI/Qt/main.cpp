@@ -94,17 +94,42 @@ ErrorOr<int> ladybird_main(Main::Arguments arguments)
         };
 
         auto last_size = Ladybird::Settings::the()->last_size();
-        Ladybird::WindowConfiguration configuration {
+        Ladybird::WindowConfiguration default_configuration {
             .width = last_size.width(),
             .height = last_size.height(),
             .maximized = Ladybird::Settings::the()->is_maximized(),
         };
         if (auto last_position = Ladybird::Settings::the()->last_position(); last_position.has_value()) {
-            configuration.x = last_position->x();
-            configuration.y = last_position->y();
+            default_configuration.x = last_position->x();
+            default_configuration.y = last_position->y();
         }
-        auto& window = app->new_window(browser_options.urls, configuration);
-        window.setWindowTitle("Ladybird");
+
+        if (auto session = app->session_to_restore_on_startup(); session.has_value()) {
+            for (auto const& window_state : session->windows) {
+                Vector<URL::URL> urls;
+                urls.ensure_capacity(window_state.tabs.size());
+                for (auto const& tab : window_state.tabs)
+                    urls.append(tab.url);
+
+                Ladybird::WindowConfiguration configuration = default_configuration;
+                if (window_state.x.has_value())
+                    configuration.x = *window_state.x;
+                if (window_state.y.has_value())
+                    configuration.y = *window_state.y;
+                if (window_state.width.has_value())
+                    configuration.width = *window_state.width;
+                if (window_state.height.has_value())
+                    configuration.height = *window_state.height;
+                configuration.maximized = window_state.maximized;
+
+                auto& window = app->new_window(urls, configuration);
+                window.setWindowTitle("Ladybird");
+                window.activate_tab(static_cast<int>(window_state.active_tab_index));
+            }
+        } else {
+            auto& window = app->new_window(browser_options.urls, default_configuration);
+            window.setWindowTitle("Ladybird");
+        }
     }
 
     return app->execute();

@@ -9,6 +9,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/ThreadEventQueue.h>
 #include <LibWebView/Application.h>
+#include <LibWebView/SessionStore.h>
 #include <LibWebView/URL.h>
 #include <LibWebView/ViewImplementation.h>
 #include <Utilities/Conversions.h>
@@ -470,6 +471,14 @@ void Application::on_devtools_disabled() const
 
     ApplicationDelegate* delegate = [NSApp delegate];
     [delegate onDevtoolsDisabled];
+}
+
+WebView::SessionSnapshot Application::capture_session() const
+{
+    ApplicationDelegate* delegate = [NSApp delegate];
+    if (!delegate)
+        return {};
+    return [delegate captureSession];
 }
 
 }

@@ -37,6 +37,7 @@
 #include <LibWebView/PrivateBrowsing.h>
 #include <LibWebView/Process.h>
 #include <LibWebView/ProcessManager.h>
+#include <LibWebView/SessionStore.h>
 #include <LibWebView/Settings.h>
 #include <LibWebView/StorageJar.h>
 
@@ -107,7 +108,13 @@ public:
     virtual NonnullRefPtr<BookmarkFolderPromise> display_edit_bookmark_folder_dialog([[maybe_unused]] BookmarkItem::Folder const& current_folder) const;
 
     static HistoryStore& history_store(IsPrivate);
+    static SessionStore& session_store() { return the().m_session_store; }
     static CookieJar& cookie_jar(IsPrivate);
+
+    void schedule_session_persist();
+    void persist_session_now();
+    Optional<SessionSnapshot> session_to_restore_on_startup() const;
+    virtual SessionSnapshot capture_session() const { return {}; }
     static HSTSStore& hsts_store(IsPrivate);
     static StorageJar& storage_jar(IsPrivate);
 
@@ -378,6 +385,8 @@ private:
 
     BookmarkStore m_bookmark_store;
     OwnPtr<ApplicationBookmarkStoreObserver> m_bookmark_store_observer;
+    SessionStore m_session_store;
+    RefPtr<Core::Timer> m_session_persist_timer;
     OwnPtr<HistoryStore> m_history_store;
 
     Main::Arguments m_arguments;

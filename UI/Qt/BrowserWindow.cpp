@@ -780,6 +780,7 @@ bool BrowserWindow::definitely_close_tab(int index)
     if (m_is_private == WebView::IsPrivate::No) {
         Application::history_store(WebView::IsPrivate::No).record_closed_tab(url);
         Application::the().update_reopen_recently_closed_actions();
+        Application::the().schedule_session_persist();
     }
 
     tab->deleteLater();
@@ -1727,6 +1728,9 @@ void BrowserWindow::closeEvent(QCloseEvent* event)
         Application::history_store(WebView::IsPrivate::No).record_closed_window(recently_closed_window_urls.release_value(), recently_closed_window_active_tab_index);
         Application::the().update_reopen_recently_closed_actions();
     }
+
+    if (event->isAccepted() && m_is_private == WebView::IsPrivate::No)
+        Application::the().schedule_session_persist();
 }
 
 }
